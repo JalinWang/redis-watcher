@@ -30,8 +30,20 @@ type MSG struct {
 	ID     string
 	Sec    string
 	Ptype  string
-	Params interface{}
+	Params [][]string
 }
+
+type UpdateType = string
+
+const (
+	UpdateType_Update                        UpdateType = "Update"
+	UpdateType_UpdateForAddPolicy            UpdateType = "UpdateForAddPolicy"
+	UpdateType_UpdateForRemovePolicy         UpdateType = "UpdateForRemovePolicy"
+	UpdateType_UpdateForRemoveFilteredPolicy UpdateType = "UpdateForRemoveFilteredPolicy"
+	UpdateType_UpdateForSavePolicy           UpdateType = "UpdateForSavePolicy"
+	UpdateType_UpdateForAddPolicies          UpdateType = "UpdateForAddPolicies"
+	UpdateType_UpdateForRemovePolicies       UpdateType = "UpdateForRemovePolicies"
+)
 
 func (m *MSG) MarshalBinary() ([]byte, error) {
 	return json.Marshal(m)
@@ -186,7 +198,7 @@ func (w *Watcher) Update() error {
 	return w.logRecord(func() error {
 		w.l.Lock()
 		defer w.l.Unlock()
-		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"Update", w.options.LocalID, "", "", ""}).Err()
+		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"Update", w.options.LocalID, "", "", nil}).Err()
 	})
 }
 
@@ -196,7 +208,7 @@ func (w *Watcher) UpdateForAddPolicy(sec, ptype string, params ...string) error 
 	return w.logRecord(func() error {
 		w.l.Lock()
 		defer w.l.Unlock()
-		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"UpdateForAddPolicy", w.options.LocalID, sec, ptype, params}).Err()
+		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"UpdateForAddPolicy", w.options.LocalID, sec, ptype, [][]string{params}}).Err()
 	})
 }
 
@@ -206,7 +218,7 @@ func (w *Watcher) UpdateForRemovePolicy(sec, ptype string, params ...string) err
 	return w.logRecord(func() error {
 		w.l.Lock()
 		defer w.l.Unlock()
-		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"UpdateForRemovePolicy", w.options.LocalID, sec, ptype, params}).Err()
+		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"UpdateForRemovePolicy", w.options.LocalID, sec, ptype, [][]string{params}}).Err()
 	})
 }
 
@@ -220,7 +232,7 @@ func (w *Watcher) UpdateForRemoveFilteredPolicy(sec, ptype string, fieldIndex in
 			&MSG{"UpdateForRemoveFilteredPolicy", w.options.LocalID,
 				sec,
 				ptype,
-				fmt.Sprintf("%d %s", fieldIndex, strings.Join(fieldValues, " ")),
+				[][]string{{fmt.Sprintf("%d %s", fieldIndex, strings.Join(fieldValues, " "))}},
 			},
 		).Err()
 	})
@@ -232,7 +244,7 @@ func (w *Watcher) UpdateForSavePolicy(model model.Model) error {
 	return w.logRecord(func() error {
 		w.l.Lock()
 		defer w.l.Unlock()
-		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"UpdateForSavePolicy", w.options.LocalID, "", "", ""}).Err()
+		return w.pubClient.Publish(context.Background(), w.options.Channel, &MSG{"UpdateForSavePolicy", w.options.LocalID, "", "", nil}).Err()
 	})
 }
 
